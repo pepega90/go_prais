@@ -15,7 +15,7 @@ var (
 )
 
 func GetAllUser(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"data": db.GetAll()})
+	c.JSON(http.StatusOK, db.GetAll())
 }
 
 func CreateUser(c *gin.Context) {
@@ -27,7 +27,7 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 	db.CreateUser(&req)
-	c.JSON(http.StatusOK, gin.H{"data": req})
+	c.JSON(http.StatusOK, req)
 }
 
 func UpdateUser(c *gin.Context) {
@@ -36,13 +36,13 @@ func UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 	db.UpdateUser(&req)
-	c.JSON(http.StatusOK, gin.H{"data": req})
+	c.JSON(http.StatusOK, req)
 }
 
 func GetUser(c *gin.Context) {
 	idUser, _ := strconv.Atoi(c.Param("id"))
 	user := db.GetUserByID(idUser)
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, user)
 }
 
 func DeleteUser(c *gin.Context) {
