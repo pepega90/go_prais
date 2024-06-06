@@ -2,6 +2,7 @@ package main
 
 import (
 	"go_prais/handler"
+	"go_prais/middleware"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,8 @@ import (
 
 func main() {
 	r := gin.Default()
+
+	r.Use(middleware.AuthMiddleware())
 
 	r.GET("/", handler.GetAllUser)
 	r.POST("/", handler.CreateUser)
