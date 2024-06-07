@@ -10,7 +10,7 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.Use(middleware.AuthMiddleware())
+	r.Use(middleware.AuthMiddleware)
 
 	routes.Routing(r)
 
