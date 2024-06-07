@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware(ctx *gin.Context) {
-	var (
-		user = "admin"
-		pass = "admin"
-	)
+var (
+	user = "admin"
+	pass = "admin"
+)
 
+func AuthMiddleware(ctx *gin.Context) {
 	username, password, ok := ctx.Request.BasicAuth()
 	if username != user && password != pass && !ok {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "kepo"})
