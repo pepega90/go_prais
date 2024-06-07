@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go_prais/handler"
 	"go_prais/middleware"
+	"go_prais/routes"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -10,14 +10,9 @@ import (
 
 func main() {
 	r := gin.Default()
-
 	r.Use(middleware.AuthMiddleware())
 
-	r.GET("/", handler.GetAllUser)
-	r.POST("/", handler.CreateUser)
-	r.PUT("/", handler.UpdateUser)
-	r.GET("/:id", handler.GetUser)
-	r.DELETE("/:id", handler.DeleteUser)
+	routes.Routing(r)
 
 	log.Println("Server start")
 	r.Run(":4000")
