@@ -15,7 +15,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		username, password, ok := ctx.Request.BasicAuth()
 		if username != user && password != pass && !ok {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "login basic auth"})
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "kepo"})
 			ctx.Abort()
 			return
 		}
