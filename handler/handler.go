@@ -1,52 +1,71 @@
 package handler
 
 import (
-	"fmt"
 	"go_prais/model"
+	"go_prais/services"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	db = model.New()
-)
-
-func GetAllUser(c *gin.Context) {
-	c.JSON(http.StatusOK, db.GetAll())
+type IUserHandler interface {
+	GetAllUsers(c *gin.Context)
+	CreateUser(c *gin.Context)
+	GetUser(c *gin.Context)
+	UpdateUser(c *gin.Context)
+	DeleteUser(c *gin.Context)
 }
 
-func CreateUser(c *gin.Context) {
+type UserHandler struct {
+	userService services.IUserService
+}
+
+func NewUserHandler(service services.IUserService) *UserHandler {
+	return &UserHandler{service}
+}
+
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	users := h.userService.GetAllUsers()
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req model.User
-	req.Id = len(db.DB) + 1
-	req.CreatedAt = time.Now().UTC()
-	req.UpdatedAt = time.Now().UTC()
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}
-	db.CreateUser(&req)
-	c.JSON(http.StatusOK, req)
+	u := h.userService.CreateUser(req)
+	c.JSON(http.StatusOK, u)
 }
 
-func UpdateUser(c *gin.Context) {
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	idParam, _ := strconv.Atoi(c.Param("id"))
 	var req model.User
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}
-	db.UpdateUser(&req)
-	c.JSON(http.StatusOK, req)
+	updateUser, err := h.userService.UpdateUser(idParam, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	}
+	c.JSON(http.StatusOK, updateUser)
 }
 
-func GetUser(c *gin.Context) {
-	idUser, _ := strconv.Atoi(c.Param("id"))
-	user := db.GetUserByID(idUser)
+func (h *UserHandler) GetUser(c *gin.Context) {
+	idParam, _ := strconv.Atoi(c.Param("id"))
+	user, err := h.userService.GetUser(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	}
 	c.JSON(http.StatusOK, user)
 }
 
-func DeleteUser(c *gin.Context) {
-	idUser, _ := strconv.Atoi(c.Param("id"))
-	db.DeleteUser(idUser)
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Berhasil hapus user dengan id %d", idUser)})
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	idParam, _ := strconv.Atoi(c.Param("id"))
+	err := h.userService.DeleteUser(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "successfuly delete user"})
 }
