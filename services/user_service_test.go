@@ -1,59 +1,191 @@
-package services
+package services_test
 
 import (
+	"context"
+	"errors"
 	"go_prais/model"
+	"go_prais/services"
+	mock_services "go_prais/test/mock/services"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
-func TestCreate(t *testing.T) {
-	mockRepo := &MockRepository{}
-	userService := NewUserService(mockRepo)
+func TestUserService_CreateUser(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	t.Run("create user", func(t *testing.T) {
-		u := model.User{Name: "pepeg", Email: "pepeg@handsome.com", Password: "pass"}
-		createdUser := userService.CreateUser(u)
+	mockRepo := mock_services.NewMockIUserRepository(ctrl)
+	userService := services.NewUserService(mockRepo)
 
-		assert.Equal(t, "pepeg", createdUser.Name)
-		assert.Equal(t, "pepeg@handsome.com", createdUser.Email)
+	ctx := context.Background()
+	user := &model.User{
+		Name:      "John Doe",
+		Email:     "john@example.com",
+		Password:  "password",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	t.Run("Positive Case", func(t *testing.T) {
+		mockRepo.EXPECT().CreateUser(ctx, user).Return(*user, nil)
+
+		createdUser, err := userService.CreateUser(ctx, user)
+		assert.NoError(t, err)
+		assert.Equal(t, *user, createdUser)
+	})
+
+	t.Run("NegativeCase", func(t *testing.T) {
+		mockRepo.EXPECT().CreateUser(ctx, user).Return(model.User{}, errors.New("failed to create user"))
+
+		createdUser, err := userService.CreateUser(ctx, user)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to create user")
+		assert.Equal(t, model.User{}, createdUser)
 	})
 }
 
-func TestGetUser(t *testing.T) {
-	mockRepo := &MockRepository{}
-	userService := NewUserService(mockRepo)
+func TestUserService_GetUserByID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	createdUser := model.User{Name: "pepeg", Email: "pepeg@handsome.com", Password: "pass"}
-	userService.CreateUser(createdUser)
+	mockRepo := mock_services.NewMockIUserRepository(ctrl)
+	userService := services.NewUserService(mockRepo)
 
-	u, err := userService.GetUser(0)
+	ctx := context.Background()
+	userID := 1
+	user := model.User{
+		Id:        userID,
+		Name:      "John Doe",
+		Email:     "john@example.com",
+		Password:  "password",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, "pepeg", u.Name)
+	t.Run("PositiveCase", func(t *testing.T) {
+		mockRepo.EXPECT().GetUserByID(ctx, userID).Return(user, nil)
+
+		foundUser, err := userService.GetUserByID(ctx, userID)
+		assert.NoError(t, err)
+		assert.Equal(t, user, foundUser)
+	})
+
+	t.Run("NegativeCase", func(t *testing.T) {
+		mockRepo.EXPECT().GetUserByID(ctx, userID).Return(model.User{}, errors.New("user not found"))
+
+		foundUser, err := userService.GetUserByID(ctx, userID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "user not found")
+		assert.Equal(t, model.User{}, foundUser)
+	})
 }
 
-func TestUpdateUser(t *testing.T) {
-	mockRepo := &MockRepository{}
-	userService := NewUserService(mockRepo)
+func TestUserService_UpdateUser(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	createdUser := model.User{Name: "pepeg", Email: "pepeg@handsome.com", Password: "pass"}
-	userService.CreateUser(createdUser)
+	mockRepo := mock_services.NewMockIUserRepository(ctrl)
+	userService := services.NewUserService(mockRepo)
 
-	updated := model.User{Name: "aji"}
-	updatedUser, err := userService.UpdateUser(0, updated)
+	ctx := context.Background()
+	userID := 1
+	user := model.User{
+		Id:        userID,
+		Name:      "John Doe",
+		Email:     "john@example.com",
+		Password:  "password",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 
-	assert.NoError(t, err)
-	assert.Equal(t, "aji", updatedUser.Name)
+	t.Run("PositiveCase", func(t *testing.T) {
+		mockRepo.EXPECT().UpdateUser(ctx, userID, user).Return(user, nil)
+
+		updatedUser, err := userService.UpdateUser(ctx, userID, user)
+		assert.NoError(t, err)
+		assert.Equal(t, user, updatedUser)
+	})
+
+	t.Run("NegativeCase", func(t *testing.T) {
+		mockRepo.EXPECT().UpdateUser(ctx, userID, user).Return(model.User{}, errors.New("user not found"))
+
+		updatedUser, err := userService.UpdateUser(ctx, userID, user)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "user not found")
+		assert.Equal(t, model.User{}, updatedUser)
+	})
 }
 
-func TestDelete(t *testing.T) {
-	mockRepo := &MockRepository{}
-	userService := NewUserService(mockRepo)
+func TestUserService_DeleteUser(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	createdUser := model.User{Name: "pepeg", Email: "pepeg@handsome.com", Password: "pass"}
-	userService.CreateUser(createdUser)
+	mockRepo := mock_services.NewMockIUserRepository(ctrl)
+	userService := services.NewUserService(mockRepo)
 
-	err := userService.DeleteUser(0)
-	assert.NoError(t, err)
+	ctx := context.Background()
+	userID := 1
+
+	t.Run("PositiveCase", func(t *testing.T) {
+		mockRepo.EXPECT().DeleteUser(ctx, userID).Return(nil)
+
+		err := userService.DeleteUser(ctx, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("NegativeCase", func(t *testing.T) {
+		mockRepo.EXPECT().DeleteUser(ctx, userID).Return(errors.New("user not found"))
+
+		err := userService.DeleteUser(ctx, userID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "user not found")
+	})
+}
+
+func TestUserService_GetAllUsers(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mock_services.NewMockIUserRepository(ctrl)
+	userService := services.NewUserService(mockRepo)
+
+	ctx := context.Background()
+	users := []model.User{
+		{
+			Id:        1,
+			Name:      "John Doe",
+			Email:     "john@example.com",
+			Password:  "password",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		{
+			Id:        2,
+			Name:      "Jane Doe",
+			Email:     "jane@example.com",
+			Password:  "password",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+	}
+
+	t.Run("PositiveCase", func(t *testing.T) {
+		mockRepo.EXPECT().GetAllUsers(ctx).Return(users, nil)
+
+		retrievedUsers, err := userService.GetAllUsers(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, users, retrievedUsers)
+	})
+
+	t.Run("NegativeCase", func(t *testing.T) {
+		mockRepo.EXPECT().GetAllUsers(ctx).Return([]model.User{}, errors.New("no users found"))
+
+		retrievedUsers, err := userService.GetAllUsers(ctx)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "no users found")
+		assert.Empty(t, retrievedUsers)
+	})
 }

@@ -2,14 +2,19 @@ package routes
 
 import (
 	"go_prais/handler"
-	"go_prais/repository/slice"
+	"go_prais/repository/postgres_pgx"
 	"go_prais/services"
+	"go_prais/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Routing(r *gin.Engine) {
-	userRepo := slice.NewSliceRepository()
+	// userRepo := slice.NewSliceRepository()
+	// userService := services.NewUserService(userRepo)
+	// userHandler := handler.NewUserHandler(userService)
+	db := utils.DBPostgre()
+	userRepo := postgres_pgx.NewUserRepository(db)
 	userService := services.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 

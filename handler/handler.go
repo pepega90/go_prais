@@ -27,7 +27,7 @@ func NewUserHandler(service services.IUserService) *UserHandler {
 }
 
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
-	users := h.userService.GetAllUsers()
+	users, _ := h.userService.GetAllUsers(c.Request.Context())
 	c.JSON(http.StatusOK, users)
 }
 
@@ -36,10 +36,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		errMsg := err.Error()
 		errMsg = convertUserMandatoryFieldErrorString(errMsg)
-		c.JSON(http.StatusBadRequest, gin.H{"message": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
 		return
 	}
-	u := h.userService.CreateUser(req)
+	u, _ := h.userService.CreateUser(c.Request.Context(), &req)
 	c.JSON(http.StatusOK, u)
 }
 
@@ -50,7 +50,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	updateUser, err := h.userService.UpdateUser(idParam, req)
+	updateUser, err := h.userService.UpdateUser(c.Request.Context(), idParam, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -60,7 +60,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 func (h *UserHandler) GetUser(c *gin.Context) {
 	idParam, _ := strconv.Atoi(c.Param("id"))
-	user, err := h.userService.GetUser(idParam)
+	user, err := h.userService.GetUserByID(c.Request.Context(), idParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -70,7 +70,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idParam, _ := strconv.Atoi(c.Param("id"))
-	err := h.userService.DeleteUser(idParam)
+	err := h.userService.DeleteUser(c.Request.Context(), idParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

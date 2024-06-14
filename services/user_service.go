@@ -1,60 +1,85 @@
 package services
 
-import "go_prais/model"
+import (
+	"context"
+	"fmt"
+	"go_prais/model"
+)
 
+// IUserService mendefinisikan interface untuk layanan pengguna
 type IUserService interface {
-	GetAllUsers() []*model.User
-	CreateUser(user model.User) *model.User
-	UpdateUser(id int, user model.User) (*model.User, error)
-	DeleteUser(id int) error
-	GetUser(id int) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.User) (model.User, error)
+	GetUserByID(ctx context.Context, id int) (model.User, error)
+	UpdateUser(ctx context.Context, id int, user model.User) (model.User, error)
+	DeleteUser(ctx context.Context, id int) error
+	GetAllUsers(ctx context.Context) ([]model.User, error)
 }
 
+// IUserRepository mendefinisikan interface untuk repository pengguna
 type IUserRepository interface {
-	GetAllUsers() []*model.User
-	CreateUser(user model.User) *model.User
-	UpdateUser(id int, user model.User) (*model.User, error)
-	DeleteUser(id int) error
-	GetUser(id int) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.User) (model.User, error)
+	GetUserByID(ctx context.Context, id int) (model.User, error)
+	UpdateUser(ctx context.Context, id int, user model.User) (model.User, error)
+	DeleteUser(ctx context.Context, id int) error
+	GetAllUsers(ctx context.Context) ([]model.User, error)
 }
 
+// userService adalah implementasi dari IUserService yang menggunakan IUserRepository
 type userService struct {
 	userRepo IUserRepository
 }
 
-func NewUserService(userRepo IUserRepository) *userService {
-	return &userService{userRepo}
+// NewUserService membuat instance baru dari userService
+func NewUserService(userRepo IUserRepository) IUserService {
+	return &userService{userRepo: userRepo}
 }
 
-func (s *userService) GetAllUsers() []*model.User {
-	users := s.userRepo.GetAllUsers()
-	return users
-}
-
-func (s *userService) CreateUser(req model.User) *model.User {
-	return s.userRepo.CreateUser(req)
-}
-
-func (s *userService) GetUser(id int) (*model.User, error) {
-	user, err := s.userRepo.GetUser(id)
+// CreateUser membuat pengguna baru
+func (s *userService) CreateUser(ctx context.Context, user *model.User) (model.User, error) {
+	// Memanggil CreateUser dari repository untuk membuat pengguna baru
+	createdUser, err := s.userRepo.CreateUser(ctx, user)
 	if err != nil {
-		return nil, err
+		return model.User{}, fmt.Errorf("gagal membuat pengguna: %v", err)
+	}
+	return createdUser, nil
+}
+
+// GetUserByID mendapatkan pengguna berdasarkan ID
+func (s *userService) GetUserByID(ctx context.Context, id int) (model.User, error) {
+	// Memanggil GetUserByID dari repository untuk mendapatkan pengguna berdasarkan ID
+	user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {
+		return model.User{}, fmt.Errorf("gagal mendapatkan pengguna berdasarkan ID: %v", err)
 	}
 	return user, nil
 }
 
-func (s *userService) UpdateUser(id int, req model.User) (*model.User, error) {
-	updatedUser, err := s.userRepo.UpdateUser(id, req)
+// UpdateUser memperbarui data pengguna
+func (s *userService) UpdateUser(ctx context.Context, id int, user model.User) (model.User, error) {
+	// Memanggil UpdateUser dari repository untuk memperbarui data pengguna
+	updatedUser, err := s.userRepo.UpdateUser(ctx, id, user)
 	if err != nil {
-		return nil, err
+		return model.User{}, fmt.Errorf("gagal memperbarui pengguna: %v", err)
 	}
 	return updatedUser, nil
 }
 
-func (s *userService) DeleteUser(id int) error {
-	err := s.userRepo.DeleteUser(id)
+// DeleteUser menghapus pengguna berdasarkan ID
+func (s *userService) DeleteUser(ctx context.Context, id int) error {
+	// Memanggil DeleteUser dari repository untuk menghapus pengguna berdasarkan ID
+	err := s.userRepo.DeleteUser(ctx, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("gagal menghapus pengguna: %v", err)
 	}
 	return nil
+}
+
+// GetAllUsers mendapatkan semua pengguna
+func (s *userService) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	// Memanggil GetAllUsers dari repository untuk mendapatkan semua pengguna
+	users, err := s.userRepo.GetAllUsers(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mendapatkan semua pengguna: %v", err)
+	}
+	return users, nil
 }
