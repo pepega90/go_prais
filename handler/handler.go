@@ -5,6 +5,7 @@ import (
 	"go_prais/services"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,10 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req model.User
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		errMsg := err.Error()
+		errMsg = convertUserMandatoryFieldErrorString(errMsg)
+		c.JSON(http.StatusBadRequest, gin.H{"message": errMsg})
+		return
 	}
 	u := h.userService.CreateUser(req)
 	c.JSON(http.StatusOK, u)
@@ -44,10 +48,12 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var req model.User
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
 	}
 	updateUser, err := h.userService.UpdateUser(idParam, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, updateUser)
 }
@@ -57,6 +63,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	user, err := h.userService.GetUser(idParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, user)
 }
@@ -66,6 +73,17 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	err := h.userService.DeleteUser(idParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "successfuly delete user"})
+}
+
+func convertUserMandatoryFieldErrorString(oldErrorMsg string) string {
+	switch {
+	case strings.Contains(oldErrorMsg, "'Name' failed on the 'required' tag"):
+		return "Name tidak boleh kosong!"
+	case strings.Contains(oldErrorMsg, "'Email' failed on the 'required' tag"):
+		return "E-mail tidak boleh kosong!"
+	}
+	return oldErrorMsg
 }
