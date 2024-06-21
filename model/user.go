@@ -3,10 +3,10 @@ package model
 import "time"
 
 type User struct {
-	Id        int       `json:"id"`
-	Name      string    `json:"name" binding:"required"`
-	Email     string    `json:"email" binding:"required"`
-	Password  string    `json:"password"`
+	Id        int       `gorm:"primaryKey" json:"id"`
+	Name      string    `gorm:"type:varchar;not null" json:"name" binding:"required"`
+	Email     string    `gorm:"type:varchar;uniqueIndex;not null" json:"email" binding:"required,email"`
+	Password  string    `gorm:"type:varchar;not null" json:"password"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
