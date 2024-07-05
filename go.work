@@ -1,0 +1,7 @@
+go 1.21.6
+
+use (
+	./grpc_session/simple_e_wallet
+	./grpc_session/user_grpc_crud
+	./session_1_ke_8
+)

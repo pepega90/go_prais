@@ -1,0 +1,22 @@
+version: '3.1'
+services:
+  db:
+    image: postgres:10-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: prais
+      POSTGRES_PASSWORD: prais
+      POSTGRES_DB: db_prais
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  admin:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8080:8080
+
+volumes:
+  db_data:
